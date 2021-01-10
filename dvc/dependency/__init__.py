@@ -14,6 +14,7 @@ from dvc.dependency.ssh import SSHDependency
 from dvc.dependency.webdav import WebDAVDependency
 from dvc.dependency.webdavs import WebDAVSDependency
 from dvc.dependency.webhdfs import WebHDFSDependency
+from dvc.dependency.dropbox import DropboxDependency
 from dvc.output.base import BaseOutput
 from dvc.scheme import Schemes
 
@@ -31,6 +32,7 @@ DEPS = [
     WebDAVDependency,
     WebDAVSDependency,
     WebHDFSDependency,
+    DropboxDependency,
     # NOTE: LocalDependency is the default choice
 ]
 
@@ -46,6 +48,7 @@ DEP_MAP = {
     Schemes.WEBDAV: WebDAVDependency,
     Schemes.WEBDAVS: WebDAVSDependency,
     Schemes.WEBHDFS: WebHDFSDependency,
+    Schemes.DROPBOX: DropboxDependency,
 }
 
 

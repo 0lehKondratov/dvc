@@ -12,6 +12,7 @@ from dvc.output.local import LocalOutput
 from dvc.output.s3 import S3Output
 from dvc.output.ssh import SSHOutput
 from dvc.output.webhdfs import WebHDFSOutput
+from dvc.output.dropbox import DropboxOutput
 from dvc.scheme import Schemes
 
 from ..tree import get_cloud_tree
@@ -26,6 +27,7 @@ OUTS = [
     GSOutput,
     SSHOutput,
     WebHDFSOutput,
+    DropboxOutput,
     # NOTE: LocalOutput is the default choice
 ]
 
@@ -36,6 +38,7 @@ OUTS_MAP = {
     Schemes.SSH: SSHOutput,
     Schemes.LOCAL: LocalOutput,
     Schemes.WEBHDFS: WebHDFSOutput,
+    Schemes.DROPBOX: DropboxOutput,
 }
 
 CHECKSUM_SCHEMA = Any(
