@@ -100,8 +100,8 @@ Auth = namedtuple("Auth", ["client", "creds"])
 
 
 class DropboxCredProvider(metaclass=ABCMeta):
-    DROPBOX_APP_KEY = ""
-    DROPBOX_APP_SECRET = ""
+    DROPBOX_APP_KEY = "6m0gojl32w2tiyq"
+    DROPBOX_APP_SECRET = "pp8gxp8itnwthnl"
 
     @abstractmethod
     def can_auth(self):
