@@ -131,8 +131,6 @@ class URLInfo(_BasePath):
     def from_parts(
         cls, scheme=None, host=None, user=None, port=None, path="", netloc=None
     ):
-        assert bool(host) ^ bool(netloc)
-
         if netloc is not None:
             return cls(f"{scheme}://{netloc}{path}")
 
@@ -168,7 +166,7 @@ class URLInfo(_BasePath):
 
     @cached_property
     def url(self):
-        return f"{self.scheme}://{self.netloc}{self._spath}"
+        return f"{self.scheme}://{self.netloc or ''}{self._spath}"
 
     def __str__(self):
         return self.url
