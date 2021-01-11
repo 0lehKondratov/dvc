@@ -304,18 +304,28 @@ class DropboxTree(BaseTree):
                 ) from ex
             raise
 
-    def exists(self, path_info, use_dvcignore=True):
+    def _get_file_metadata_no_exception(self, path_info):
         import dropbox
 
         path = path_info_to_dropbox_path(path_info)
-        logger.debug("Checking existence of {0}".format(path))
+        logger.debug("Trying to get metadata for {0}".format(path))
         try:
-            self.client.files_get_metadata(path)
-            return True
+            return self.client.files_get_metadata(path)
         except dropbox.exceptions.ApiError as ex:
             if ex.error.is_path() and ex.error.get_path().is_not_found():
-                return False
+                return None
             raise
+
+    def isdir(self, path_info):
+        from dropbox.files import FolderMetadata
+        meta = self._get_file_metadata_no_exception(path_info)
+        if meta:
+            isinstance(meta, FolderMetadata)
+        else:
+            return False
+
+    def exists(self, path_info, use_dvcignore=True):
+        return bool(self._get_file_metadata_no_exception(path_info))
 
     def walk_files(self, path_info, **kwargs):
         """Return a generator with `PathInfo`s to all the files.
@@ -371,29 +381,22 @@ class DropboxTree(BaseTree):
             raise
 
     def get_file_hash(self, path_info):
-        import dropbox
+        meta = self._get_file_metadata_no_exception(path_info)
 
-        path = path_info_to_dropbox_path(path_info)
-        logger.debug("Getting hash of {0}".format(path))
-        try:
-            return HashInfo(
-                self.PARAM_CHECKSUM,
-                self.client.files_get_metadata(path).content_hash,
+        if meta:
+            return HashInfo(self.PARAM_CHECKSUM, meta.content_hash)
+        else:
+            raise DvcException(
+                "Path not found for '{}':\n\n"
+                "1. Confirm the file exists and you can access it.\n"
+                "2. Make sure that credentials in '{}'\n"
+                "   are correct for this remote e.g. "
+                "use the `dropbox_user_credentials_file` config\n"
+                "   option if you use multiple Dropbox remotes with "
+                "different email accounts.\n\nDetails".format(
+                    path_info, FileCredProvider.DEFAULT_FILE
+                )
             )
-        except dropbox.exceptions.ApiError as ex:
-            if ex.error.is_path() and ex.error.get_path().is_not_found():
-                raise DvcException(
-                    "Path not found for '{}':\n\n"
-                    "1. Confirm the file exists and you can access it.\n"
-                    "2. Make sure that credentials in '{}'\n"
-                    "   are correct for this remote e.g. "
-                    "use the `dropbox_user_credentials_file` config\n"
-                    "   option if you use multiple Dropbox remotes with "
-                    "different email accounts.\n\nDetails".format(
-                        path, FileCredProvider.DEFAULT_FILE
-                    )
-                ) from ex
-            raise
 
     def _upload(
         self, from_file, to_info, name=None, no_progress_bar=False, **_kwargs
