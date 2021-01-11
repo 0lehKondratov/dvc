@@ -234,7 +234,7 @@ class FileCredProvider(DropboxCredProvider):
 
 
 def path_info_to_dropbox_path(path_info):
-    return "/" + path_info.bucket + "/" + path_info.path
+    return "/" + path_info.path
 
 
 class DropboxTree(BaseTree):
@@ -320,7 +320,7 @@ class DropboxTree(BaseTree):
         from dropbox.files import FolderMetadata
         meta = self._get_file_metadata_no_exception(path_info)
         if meta:
-            isinstance(meta, FolderMetadata)
+            return isinstance(meta, FolderMetadata)
         else:
             return False
 
@@ -351,9 +351,7 @@ class DropboxTree(BaseTree):
         while True:
             for entry in res.entries:
                 if isinstance(entry, FileMetadata):
-                    post_bucket = entry.path_lower[len(path_info.bucket) + 1 :]
-                    replaced = path_info.replace(post_bucket)
-                    yield replaced
+                    yield path_info.replace(entry.path_lower)
             if not res.has_more:
                 break
             res = self.client.files_list_folder_continue(res.cursor)
