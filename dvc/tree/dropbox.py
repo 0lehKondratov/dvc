@@ -251,6 +251,10 @@ class DropboxTree(BaseTree):
     # Always prefer traverse for Dropbox since API usage quotas are a concern.
     TRAVERSE_WEIGHT_MULTIPLIER = 1
     TRAVERSE_PREFIX_LEN = 2
+    # It uses requests iter_content internally,
+    # default chunk size 1 is terribly slow. Here we use the same as defined in
+    # the http tree.
+    DOWNLOAD_CHUNK_SIZE = 2 ** 16
 
     def __init__(self, repo, config):
         super().__init__(repo, config)
@@ -463,5 +467,5 @@ class DropboxTree(BaseTree):
         with open(to_file, "wb") as fobj, closing(res) as body, Tqdm.wrapattr(
             fobj, "write", desc=name, total=meta.size, disable=no_progress_bar
         ) as wrapped:
-            for chunk in body.iter_content():
+            for chunk in body.iter_content(chunk_size=self.DOWNLOAD_CHUNK_SIZE):
                 wrapped.write(chunk)
