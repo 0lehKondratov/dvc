@@ -1,8 +1,10 @@
 import os
+import textwrap
 from copy import deepcopy
 
 import pytest
 
+from dvc.cli import main
 from dvc.dependency import _merge_params
 from dvc.parsing import DEFAULT_PARAMS_FILE, DataResolver
 from dvc.parsing.context import recurse_not_a_node
@@ -296,9 +298,9 @@ def test_cmd_dict(tmp_dir, dvc, bool_config, list_config):
         bool_resolved = " --bool --no-bool-false"
 
     if list_config is None or list_config == "nargs":
-        list_resolved = " --list 1 2 'foo'"
+        list_resolved = ' --list 1 2 "foo"'
     else:
-        list_resolved = " --list 1 --list 2 --list 'foo'"
+        list_resolved = ' --list 1 --list 2 --list "foo"'
 
     assert_stage_equal(
         resolver.resolve(),
@@ -306,12 +308,45 @@ def test_cmd_dict(tmp_dir, dvc, bool_config, list_config):
             "stages": {
                 "stage1": {
                     "cmd": "python script.py"
-                    " --foo 'foo' --bar 2"
-                    " --string 'spaced string'"
+                    ' --foo "foo" --bar 2'
+                    ' --string "spaced string"'
                     f"{bool_resolved}"
                     f"{list_resolved}"
-                    " --nested.foo 'foo'"
+                    ' --nested.foo "foo"'
                 }
             }
         },
     )
+
+
+def test_str_interpolation_added_quotes(tmp_dir, dvc):
+    """Regression test for 8203"""
+    code = textwrap.dedent(
+        """
+        import argparse
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--a_str", choices=["hello", "goodbye"])
+        parser.add_argument("--a_list", nargs="+")
+
+        if __name__ == "__main__":
+            args = parser.parse_args()
+            print(args)
+        """
+    )
+
+    data = {
+        "dict": {
+            "a_str": "hello",
+            "a_list": ["foo", "bar"],
+        }
+    }
+    (tmp_dir / DEFAULT_PARAMS_FILE).dump(data)
+    (tmp_dir / "test.py").write_text(code)
+    dvc.stage.add(
+        name="test",
+        cmd=["python test.py ${dict}"],
+        no_commit=True,
+    )
+    ret = main(["repro"])
+    assert ret == 0

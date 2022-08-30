@@ -98,12 +98,12 @@ def _(obj: dict):
                     result += f"--no-{k} "
 
         elif isinstance(v, str):
-            result += f"--{k} '{v}' "
+            result += f'--{k} "{v}" '
 
         elif isinstance(v, Iterable):
             for n, i in enumerate(v):
                 if isinstance(i, str):
-                    i = f"'{i}'"
+                    i = f'"{i}"'
                 elif isinstance(i, Iterable):
                     raise ParseError(
                         f"Cannot interpolate nested iterable in '{k}'"
